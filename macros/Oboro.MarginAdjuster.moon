@@ -1,7 +1,7 @@
 export script_name = "Margin Adjuster"
 export script_description = "Adjust subtitle position margins"
 export script_author = "oborozuk1"
-export script_version = "0.2.1"
+export script_version = "0.2.0"
 
 ALLOWED_OFFSET = 6
 
