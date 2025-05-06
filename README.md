@@ -4,7 +4,7 @@
 
 调整视觉不居中的字幕行
 
-- **Margin Adjuster/Adjust Dialogues:** 调整对话[段落](#MingYSub-Scripts-解释)，会跳过带有 `\pos` 和 `\move` 的行
+- **Margin Adjuster/Adjust Dialogues:** 调整对话[段落](#解释)，会跳过带有 `\pos` 和 `\move` 的行
 - **Margin Adjuster/Adjust Paragraphs:** 通过对话框指定要调整的段落，跳过带有 `\pos` 和 `\move` 的行
 - **Margin Adjuster/Adjust Selection:** 选中字幕，调整其边距
 - **Margin Adjuster/Adjust Selection using `\pos`:** 使用 `\pos` 标签调整选中字幕的边距
