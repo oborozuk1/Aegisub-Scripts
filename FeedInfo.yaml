@@ -1,0 +1,21 @@
+general:
+  name: "Oborozuki Aegisub Scripts"
+  description: "A collection of Oborozuki's Aegisub scripts"
+  maintainer: "Oborozuki"
+  repository: "oborozuk1/Aegisub-Scripts"
+
+knownFeeds:
+  ILL: "https://raw.githubusercontent.com/TypesettingTools/ILL-Aegisub-Scripts/main/DependencyControl.json"
+
+macros:
+  Oboro.MarginAdjuster:
+    description: "Adjusts the margins of selected lines."
+    channels:
+      main:
+        requiredModules:
+          - moduleName: "ILL.ILL"
+            feed: "@{feed:ILL}"
+            version: "1.5.7"
+    changelog:
+      "0.2.0":
+        - "Initial release"

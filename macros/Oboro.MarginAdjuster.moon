@@ -9,7 +9,7 @@ haveDepCtrl, DependencyControl = pcall require, "l0.DependencyControl"
 local depctrl, re, Ass, Config, Line, Math
 if haveDepCtrl
   depctrl = DependencyControl {
-		feed: "https://raw.githubusercontent.com/TypesettingTools/ILL-Aegisub-Scripts/main/DependencyControl.json"
+    feed: "https://raw.githubusercontent.com/TypesettingTools/ILL-Aegisub-Scripts/main/DependencyControl.json"
     { "ILL.ILL" }
   }
   ILL = depctrl\requireModules!
