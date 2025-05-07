@@ -1,6 +1,10 @@
 # Aegisub-Scripts
 
+DepCtrl Feed: `https://raw.githubusercontent.com/oborozuk1/Aegisub-Scripts/main/DependencyControl.json`
+
 ## MarginAdjuster
+
+可用 DepCtrl 安装
 
 调整视觉不居中的字幕行
 
@@ -10,6 +14,8 @@
 - **Margin Adjuster/Adjust Selection using `\pos`:** 使用 `\pos` 标签调整选中字幕的边距
 
 ## MingYSub-Scripts
+
+请手动安装 [MingYSub-Scripts.lua](./macros/MingYSub-Scripts.lua)
 
 适用于 MingYSub 的实用字幕处理工具
 
