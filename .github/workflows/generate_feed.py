@@ -40,12 +40,10 @@ def set_general(info):
     else:
         raise ValueError("Cannot set baseUrl")
 
-    if file_base_url := info.get("baseUrl"):
+    if file_base_url := info.get("fileBaseUrl"):
         info["fileBaseUrl"] = file_base_url
     elif repository := info.get("repository"):
-        info["fileBaseUrl"] = (
-            f"https://raw.githubusercontent.com/{repository}/@{{channel}}"
-        )
+        info["fileBaseUrl"] = f"https://raw.githubusercontent.com/{repository}/@{{channel}}"
     else:
         raise ValueError("Cannot set fileBaseUrl")
 
@@ -80,7 +78,7 @@ def set_channels(root_dir, macro_name, macro_info):
         channel_info.setdefault("files", [{"name": ".moon"}])
 
         for file_info in channel_info["files"]:
-            file_info.setdefault("url", "@{fileBaseUrl}/@{fileName}")
+            file_info.setdefault("url", "@{fileBaseUrl}@{fileName}")
 
             # TODO: extract requiredModules from files
 
