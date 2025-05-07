@@ -3,7 +3,7 @@
     "description": "A collection of Oborozuki's Aegisub scripts",
     "maintainer": "Oborozuki",
     "baseUrl": "https://github.com/oborozuk1/Aegisub-Scripts",
-    "fileBaseUrl": "https://github.com/oborozuk1/Aegisub-Scripts",
+    "fileBaseUrl": "https://raw.githubusercontent.com/oborozuk1/Aegisub-Scripts/@{channel}",
     "url": "@{baseUrl}",
     "knownFeeds": {
         "ILL": "https://raw.githubusercontent.com/TypesettingTools/ILL-Aegisub-Scripts/main/DependencyControl.json"
@@ -23,7 +23,7 @@
                     "files": [
                         {
                             "name": ".moon",
-                            "url": "@{fileBaseUrl}/@{fileName}",
+                            "url": "@{fileBaseUrl}@{fileName}",
                             "sha1": "d3b0140bb6fa051d0fec16051c1791c61f80bb43"
                         }
                     ],
