@@ -64,14 +64,6 @@ def read_from_yaml(file_path: Path) -> dict:
     for key, value in dic.items():
         if key == "general":
             res |= set_general(value)
-        elif key == "macros":
-            res.setdefault("macros", {})
-            for k, v in value.items():
-                if all(isinstance(x, dict) for x in v.values()):
-                    for name, conf in v.items():
-                        res["macros"][f"{k}.{name}"] = conf
-                else:
-                    res["macros"][k] = v
         else:
             res[key] = value
 
