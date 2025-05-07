@@ -1,7 +1,7 @@
 ﻿script_name = "MingYSub Scripts"
 script_description = "适用于 MingYSub 的实用字幕处理工具"
 script_author = "Ming"
-script_version = "0.2.2"
+script_version = "0.2.3"
 
 local cn_str = "CN"
 local jp_str = "JP"
@@ -51,10 +51,16 @@ local unrecommended_patterns = {
     {
         patterns = {
             "羁绊", "料理",
-            "凯旋(?:而归|归来)",
             "差强人意",
         },
         message = "不建议使用词汇",
+    },
+    {
+        patterns = {
+            "凯旋(?:而归|归来)",
+        },
+        message = "不建议使用词汇",
+        full_regex = true,
     },
 
 }
@@ -93,9 +99,9 @@ end
 -- 返回段落正则表达式
 local function paragraph_pattern(name)
     if name == nil or #name == 0 then
-        return "^-{6,}\\s+(.*)\\s+-{6,}.*"
+        return "^%-%-%-%-%-%-+%s+(.-)%s+%-%-%-%-%-%-"
     end
-    return "^-{6,}\\s+" .. name .. "\\s+-{6,}.*"
+    return "^%-%-%-%-%-%-+%s+(" .. escape_pattern(name) .. ")%s+%-%-%-%-%-%-"
 end
 
 local function is_cn_line(line)
@@ -133,12 +139,12 @@ local function get_all_paragraphs(sub)
         if not line.comment then
             goto continue
         end
-        local match = re.match(line.text, paragraph_pattern())
+        local match = line.text:match(paragraph_pattern())
         if match then
             if null_paragraph.end_i == 0 then
                 null_paragraph.end_i = i - 1
             end
-            local cur_paragraph = match[2].str
+            local cur_paragraph = match
             if #paragraphs ~= 0 then
                 paragraphs[#paragraphs].end_i = i - 1
             end
@@ -487,21 +493,26 @@ local function check_full_sub(sub, sel)
                         i >= jp_range.start_i and i <= jp_range.end_i) then
                     goto continue
                 end
-                local match_flag = false
                 local matches = {}
                 for _, p in ipairs(pattern.patterns) do
-                    local match = re.match(line.text, p)
-                    if match then
-                        match_flag = true
-                        if #match == 1 then
-                            table.insert(matches, match[1].str)
+                    if pattern.full_regex then
+                        local match = re.match(line.text, p)
+                        if match then
+                            if #match == 1 then
+                                table.insert(matches, match[1].str)
+                            end
+                            for j = 2, #match do
+                                table.insert(matches, match[j].str)
+                            end
                         end
-                        for j = 2, #match do
-                            table.insert(matches, match[j].str)
+                    else
+                        local match = line.text:match(p)
+                        if match then
+                            table.insert(matches, match)
                         end
                     end
                 end
-                if match_flag then
+                if #matches > 0 then
                     log(("第 %d 行: %s (%s)"):format(
                         i - i_offset, pattern.message, table.concat(matches, ", ")))
                 end
@@ -835,7 +846,7 @@ local function check_paragraph_name(sub, sel)
         return false
     end
     for i = sel[1], 1, -1 do
-        if sub[i].class == "dialogue" and sub[i].comment and re.match(sub[i].text, paragraph_pattern()) then
+        if sub[i].class == "dialogue" and sub[i].comment and sub[i].text:match(paragraph_pattern()) then
             return true
         end
     end
@@ -848,7 +859,7 @@ local function check_next_paragraph_name(sub, sel)
         return false
     end
     for i = sel[1], #sub do
-        if sub[i].class == "dialogue" and sub[i].comment and re.match(sub[i].text, paragraph_pattern()) then
+        if sub[i].class == "dialogue" and sub[i].comment and sub[i].text:match(paragraph_pattern()) then
             return true
         end
     end
@@ -860,9 +871,9 @@ local function has_bilingual_dialogue(sub)
     local cn_flag, jp_flag = false, false
     for _, line in ipairs(sub) do
         if line.class == "dialogue" then
-            if line.comment and re.match(line.text, paragraph_pattern(cn_paragraph_name)) then
+            if line.comment and line.text:match(paragraph_pattern(cn_paragraph_name)) then
                 cn_flag = true
-            elseif line.comment and re.match(line.text, paragraph_pattern(jp_paragraph_name)) then
+            elseif line.comment and line.text:match(paragraph_pattern(jp_paragraph_name)) then
                 jp_flag = true
             end
             if cn_flag and jp_flag then
