@@ -1,0 +1,46 @@
+{
+    "name": "Oborozuki Aegisub Scripts",
+    "description": "A collection of Oborozuki's Aegisub scripts",
+    "maintainer": "Oborozuki",
+    "baseUrl": "https://github.com/oborozuk1/Aegisub-Scripts",
+    "fileBaseUrl": "https://github.com/oborozuk1/Aegisub-Scripts",
+    "url": "@{baseUrl}",
+    "knownFeeds": {
+        "ILL": "https://raw.githubusercontent.com/TypesettingTools/ILL-Aegisub-Scripts/main/DependencyControl.json"
+    },
+    "macros": {
+        "Oboro.MarginAdjuster": {
+            "description": "Adjusts the margins of selected lines.",
+            "channels": {
+                "main": {
+                    "requiredModules": [
+                        {
+                            "moduleName": "ILL.ILL",
+                            "feed": "@{feed:ILL}",
+                            "version": "1.5.7"
+                        }
+                    ],
+                    "files": [
+                        {
+                            "name": ".moon",
+                            "url": "@{fileBaseUrl}/@{fileName}",
+                            "sha1": "d3b0140bb6fa051d0fec16051c1791c61f80bb43"
+                        }
+                    ],
+                    "version": "0.2.0",
+                    "released": "2025-05-07",
+                    "default": true
+                }
+            },
+            "changelog": {
+                "0.2.0": [
+                    "Initial release"
+                ]
+            },
+            "author": "Oborozuki",
+            "url": "@{baseUrl}#@{scriptName}",
+            "fileBaseUrl": "@{fileBaseUrl}/macros/@{namespace}",
+            "name": "Margin Adjuster"
+        }
+    }
+}
