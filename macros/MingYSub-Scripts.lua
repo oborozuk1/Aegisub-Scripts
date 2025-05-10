@@ -1,7 +1,7 @@
 ﻿script_name = "MingYSub Scripts"
 script_description = "适用于 MingYSub 的实用字幕处理工具"
 script_author = "Ming"
-script_version = "0.2.3"
+script_version = "0.2.4"
 
 local cn_str = "CN"
 local jp_str = "JP"
@@ -11,17 +11,18 @@ local bi_partition = "。"
 local cn_max_length = 23
 local jp_max_length = 35
 
-local re = require "re"
+local math = require "math"
 local unicode = require "unicode"
+local re = require "re"
 
 local unrecommended_patterns = {
     -- {
-    --     patterns = { ".{.*}" },
+    --     patterns = { ".{.-}" },
     --     message = "行内有标签",
     --     only_dialogue = true,
     -- },
     {
-        patterns = { "\\.{2,}" },
+        patterns = { "%.%." },
         message = "应使用中文标点",
         only_dialogue = true,
     },
@@ -65,8 +66,44 @@ local unrecommended_patterns = {
 
 }
 
+function table.copy(t, deep, seen)
+    seen = seen or {}
+    if t == nil then return nil end
+    if seen[t] then return seen[t] end
+    local nt = {}
+    for k, v in pairs(t) do
+        if deep and type(v) == 'table' then
+            nt[k] = table.copy(v, deep, seen)
+        else
+            nt[k] = v
+        end
+    end
+    setmetatable(nt, table.copy(getmetatable(t), deep, seen))
+    seen[t] = nt
+    return nt
+end
+
 local function escape_pattern(s)
     return (s:gsub("(%W)", "%%%1"))
+end
+
+local function split(text, pattern, plain)
+    local ret = {}
+    local splitStart, length = 1, #text
+    while splitStart <= length do
+        local sepStart, sepEnd = string.find(text, pattern, splitStart, plain)
+        if not sepStart then
+            table.insert(ret, string.sub(text, splitStart))
+            break
+        end
+        if sepStart > splitStart then
+            table.insert(ret, string.sub(text, splitStart, sepStart - 1))
+        else
+            table.insert(ret, "")
+        end
+        splitStart = sepEnd + 1
+    end
+    return ret
 end
 
 local function strip_tags(s)
@@ -124,9 +161,9 @@ end
 -- 转换中日段落/样式名称
 local function trans_style_name(name)
     if name:find(cn_str) then
-        return name:gsub(cn_str, jp_str)
+        return (name:gsub(cn_str, jp_str))
     elseif name:find(jp_str) then
-        return name:gsub(jp_str, cn_str)
+        return (name:gsub(jp_str, cn_str))
     end
     return nil
 end
@@ -231,54 +268,29 @@ end
 local function check_corresponding_paragraph_length(sub, paragraph, paragraphs_map)
     paragraphs_map = paragraphs_map or get_paragraphs_map(sub)
     local name = paragraph.name
-    local trans_name = trans_style_name(name)
-    if not trans_name then
+    local target_name = trans_style_name(name)
+    if not target_name then
         log(name .. " 未能找到语言代码(CN/JP)")
         return nil
     end
-    if not paragraphs_map[trans_name] then
-        log("未找到对应的段落" .. trans_name)
+    if not paragraphs_map[target_name] then
+        log("未找到对应的段落" .. target_name)
         return nil
     end
-    local to_p = paragraphs_map[trans_name]
-    return paragraph.end_i - paragraph.start_i == to_p.end_i - to_p.start_i
+    local target_para = paragraphs_map[target_name]
+    return paragraph.end_i - paragraph.start_i == target_para.end_i - target_para.start_i
 end
 
--- 拆分选定行的中日轴
-local function split_bilingual_lines(sub, sel)
-    if string.match(sub[sel[1]].style, cn_str) ~= nil and string.match(sub[sel[1]].style, jp_str) ~= nil then
-        log("未能找到语言代码(CN/JP)")
-        return
-    end
-
-    local res = {}
-
-    -- part 1
-    for i = 1, #sel do
-        local l = sub[sel[i]]
-        l.text = l.text:gsub(".*" .. bi_partition, "")
-        l.style = trans_style_name(l.style)
-        l.layer = 7
-        table.insert(res, l)
-    end
-
-    -- part 2
-    for i = 1, #sel do
-        local l = sub[sel[i]]
-        l.text = l.text:gsub(bi_partition .. ".*", "")
-        l.style = trans_style_name(l.style)
-        l.layer = 6
-        table.insert(res, l)
-    end
-
-    sub.insert(sel[#sel] + 1, unpack(res))
-
-    -- comment out the original lines
-    for _, s in ipairs(sel) do
-        local l = sub[s]
-        l.comment = true
-        sub[s] = l
-    end
+local function split_line_text(line)
+    local line2 = table.copy(line)
+    local tag = line.text:match("^{.-}") or ""
+    line.text = line.text:match("(.-)" .. bi_partition)
+    line.layer = 6
+    line2.text = tag .. line2.text:sub(#line.text + #bi_partition + 1)
+    -- line2.text = tag .. line2.text:match(".-" .. bi_partition .. "(.*)")
+    line2.style = trans_style_name(line2.style)
+    line2.layer = 7
+    return line, line2
 end
 
 -- 拆分选定段落的中日轴
@@ -292,49 +304,37 @@ local function split_bilingual_paragraphs(sub, sel)
         local i_offset = get_index_offset(sub)
         for i = paragraph.start_i + 1, paragraph.end_i do
             if sub[i].text:find(bi_partition) == nil then
-                log("第 " .. i - i_offset .. " 行不包含分隔符")
+                log(("第 %d 行不包含分隔符: \"%s\""):format(i - i_offset, bi_partition))
                 flag = true
             end
             if not is_cn_line(sub[i]) and not is_jp_line(sub[i]) then
-                log("第 " .. i - i_offset .. " 行未能找到语言代码(CN/JP)")
+                log(("第 %d 行未能找到语言代码(%s/%s)"):format(i - i_offset, cn_str, jp_str))
                 flag = true
             end
         end
         if flag then
-            return
+            aegisub.cancel()
         end
 
-        local copy = {}
-        for i = paragraph.start_i, paragraph.end_i do
-            copy[i] = sub[i]
-        end
+        local part2 = {}
+        local part2_comment = table.copy(sub[paragraph.start_i])
+        part2_comment.layer = 6
+        table.insert(part2, part2_comment)
 
-        -- CN part
+        local part1_comment = table.copy(sub[paragraph.start_i])
+        part1_comment.style = trans_style_name(part1_comment.style)
+        part1_comment.text = trans_style_name(part1_comment.text) or part1_comment.text
+        part1_comment.layer = 7
+        sub[paragraph.start_i] = part1_comment
+
         for i = paragraph.start_i + 1, paragraph.end_i do
             local l = sub[i]
-            local tag = l.text:match("^{[^}]+}") or ""
-            l.text = tag .. l.text:gsub(".*" .. bi_partition, "")
-            l.style = l.style:gsub(jp_str, cn_str)
-            l.layer = 9
-            sub[i] = l
+            local line1, line2 = split_line_text(l)
+            table.insert(part2, line1)
+            sub[i] = line2
         end
 
-        -- JP part
-        local res = {}
-        local l = copy[paragraph.start_i]
-        l.comment = true
-        l.style = l.style:gsub(cn_str, jp_str)
-        l.text = l.text:gsub(cn_str, jp_str)
-        table.insert(res, l)
-
-        for i = paragraph.start_i + 1, paragraph.end_i do
-            local l = copy[i]
-            l.text = l.text:gsub(bi_partition .. ".*", "")
-            l.style = l.style:gsub(cn_str, jp_str)
-            l.layer = 8
-            table.insert(res, l)
-        end
-        sub.insert(paragraph.end_i + 1, unpack(res))
+        sub.insert(paragraph.end_i + 1, unpack(part2))
     end
 end
 
@@ -533,14 +533,14 @@ local function jump_to_corresponding_line(sub, sel)
     for _, i in ipairs(sel) do
         for name, p in pairs(paragraphs_map) do
             if i >= p.start_i and i <= p.end_i then
-                local trans_name = trans_style_name(name)
-                if not trans_name then
+                local target_name = trans_style_name(name)
+                if not target_name then
                     log(name .. " 未能找到语言代码(CN/JP)")
                     return
                 end
-                local trans_i = paragraphs_map[trans_name].start_i - p.start_i + i
-                if min_i <= trans_i and trans_i <= max_i then
-                    table.insert(res, trans_i)
+                local target_i = paragraphs_map[target_name].start_i - p.start_i + i
+                if min_i <= target_i and target_i <= max_i then
+                    table.insert(res, target_i)
                 end
             end
         end
@@ -558,8 +558,8 @@ local function apply_to_corresponding_paragragh(sub, sel)
         paragraphs_sel_map[p.name] = p
     end
     for _, p in ipairs(paragraphs) do
-        local trans_name = trans_style_name(p.name)
-        if trans_name and paragraphs_sel_map[trans_name] then
+        local target_name = trans_style_name(p.name)
+        if target_name and paragraphs_sel_map[target_name] then
             log("不能同时选中两种语言的段落")
             return
         end
@@ -590,62 +590,115 @@ local function apply_to_corresponding_paragragh(sub, sel)
     for _, p in ipairs(paragraphs) do
         local name = p.name
         for i = p.start_i, p.end_i do
-            local trans_name = trans_style_name(name)
-            local trans_i = paragraphs_map[trans_name].start_i - p.start_i + i
-            local trans_line = sub[trans_i]
+            local target_name = trans_style_name(name)
+            local target_i = paragraphs_map[target_name].start_i - p.start_i + i
+            local target_line = sub[target_i]
             if sub[i].effect:find("@link") and not sub[i].effect:find("@linked") then
                 for _, index in ipairs(linked_lines) do
                     local line = sub[index]
-                    if line.start_time == trans_line.start_time and line.end_time == trans_line.end_time then
+                    if line.start_time == target_line.start_time and line.end_time == target_line.end_time then
                         line.start_time = sub[i].start_time
                         line.end_time = sub[i].end_time
                         sub[index] = line
                     end
                 end
             end
-            trans_line.style = trans_style_name(sub[i].style)
-            trans_line.start_time = sub[i].start_time
-            trans_line.end_time = sub[i].end_time
-            trans_line.margin_l = sub[i].margin_l
-            trans_line.margin_r = sub[i].margin_r
-            trans_line.actor = sub[i].actor
-            trans_line.effect = sub[i].effect
-            sub[trans_i] = trans_line
+            target_line.style = trans_style_name(sub[i].style)
+            target_line.start_time = sub[i].start_time
+            target_line.end_time = sub[i].end_time
+            target_line.margin_l = sub[i].margin_l
+            target_line.margin_r = sub[i].margin_r
+            target_line.actor = sub[i].actor
+            target_line.effect = sub[i].effect
+            sub[target_i] = target_line
         end
     end
 end
 
--- 复制当前行
-local function copy_line(sub, _, act)
+local function split_text_by_ratio(str, delimiter, ratio)
+    ratio = ratio or 0.5
+    if ratio <= 0 or ratio >= 1 then
+        return str, str
+    end
+
+    local splits = split(str, delimiter)
+    if #splits <= 1 then
+        return str, str
+    end
+    local positions = {}
+    local sum = 0
+    for _, s in ipairs(splits) do
+        sum = sum + #s
+        table.insert(positions, sum)
+        sum = sum + #delimiter
+    end
+
+    local target_pos = math.floor(#str * ratio)
+    local closest = positions[1]
+    local min_diff = math.abs(closest - target_pos)
+    for _, pos in ipairs(positions) do
+        local diff = math.abs(pos - target_pos)
+        if diff < min_diff then
+            closest = pos
+            min_diff = diff
+        end
+    end
+    return str:sub(1, closest), str:sub(closest + #delimiter + 1)
+end
+
+-- 复制当前激活的行
+local function duplicate_line(sub, _, act, split_line)
+    local function duplicate(index)
+        local line = sub[index]
+        local line_copy = table.copy(line)
+        if split_line and line.end_time > line.start_time then
+            local video_time = aegisub.ms_from_frame(aegisub.project_properties().video_position)
+            local ratio = (video_time - line.start_time) / (line.end_time - line.start_time)
+            line.text, line_copy.text = split_text_by_ratio(line.text, (is_jp_line(line) and "　" or " "), ratio)
+            if ratio > 0 and ratio < 1 then
+                line.end_time = video_time
+                line_copy.start_time = video_time
+            end
+        end
+        sub.delete(index)
+        sub.insert(index, line)
+        sub.insert(index + 1, line_copy)
+    end
+
     local all_paragraphs = get_all_paragraphs(sub)
     local paragraphs = get_paragraphs_by_sel(sub, { act }, all_paragraphs)
     if #paragraphs == 0 then
-        sub.insert(act + 1, sub[act])
+        duplicate(act)
         return { act + 1 }
     end
     local return_sel = act
     local paragraphs_map = get_paragraphs_map(sub, all_paragraphs)
     local p = paragraphs[1]
-    local trans_name = trans_style_name(p.name)
-    if trans_name and paragraphs_map[trans_name] then
+    local target_name = trans_style_name(p.name)
+    if target_name and paragraphs_map[target_name] then
         if check_corresponding_paragraph_length(sub, p, paragraphs_map) then
-            local trans_i = paragraphs_map[trans_name].start_i - p.start_i + act
-            if act > trans_i then
+            local target_i = paragraphs_map[target_name].start_i - p.start_i + act
+            if act > target_i then
+                duplicate(act)
+                duplicate(target_i)
                 return_sel = return_sel + 1
-                sub.insert(act + 1, sub[act])
-                sub.insert(trans_i + 1, sub[trans_i])
             else
-                sub.insert(trans_i + 1, sub[trans_i])
-                sub.insert(act + 1, sub[act])
+                duplicate(target_i)
+                duplicate(act)
             end
         else
             log("段落长度不一致，请检查")
-            return
+            aegisub.cancel()
         end
     else
         sub.insert(act + 1, sub[act])
     end
     return { return_sel }
+end
+
+-- 复制当前激活的行，并拆分文本
+local function duplicate_line_split(sub, _, act)
+    return duplicate_line(sub, _, act, true)
 end
 
 -- 下移段落
@@ -746,7 +799,6 @@ local function join_lines(sub, sel)
         return new_line
     end
 
-
     local all_paragraphs = get_all_paragraphs(sub)
     local paragraphs_sel = get_paragraphs_by_sel(sub, sel, all_paragraphs)
     local new_line = join(sub, sel)
@@ -754,7 +806,7 @@ local function join_lines(sub, sel)
     if #paragraphs_sel == 0 then
         sub.delete(sel)
         sub.insert(sel[1], new_line)
-        return sel[1]
+        return { sel[1] }
     end
     local paragraphs_sel_map = {}
     for _, p in ipairs(paragraphs_sel) do
@@ -763,9 +815,9 @@ local function join_lines(sub, sel)
     local paragraphs_map = get_paragraphs_map(sub, all_paragraphs)
     local paragraph_mode = false -- 有对应的段落，且未选中
     for _, p in ipairs(paragraphs_sel) do
-        local trans_name = trans_style_name(p.name)
-        if trans_name and paragraphs_map[trans_name] and
-            not paragraphs_sel_map[trans_name] and
+        local target_name = trans_style_name(p.name)
+        if target_name and paragraphs_map[target_name] and
+            not paragraphs_sel_map[target_name] and
             check_corresponding_paragraph_length(sub, p, paragraphs_map) then
             paragraph_mode = true
         end
@@ -775,29 +827,29 @@ local function join_lines(sub, sel)
         sub.insert(sel[1], new_line)
         return { sel[1] }
     else
-        local trans_sel = {}
+        local target_sel = {}
         for _, i in ipairs(sel) do
             for name, p in pairs(paragraphs_map) do
                 if i >= p.start_i and i <= p.end_i then
-                    local trans_name = trans_style_name(name)
-                    local trans_i = paragraphs_map[trans_name].start_i - p.start_i + i
-                    table.insert(trans_sel, trans_i)
+                    local target_name = trans_style_name(name)
+                    local target_i = paragraphs_map[target_name].start_i - p.start_i + i
+                    table.insert(target_sel, target_i)
                 end
             end
         end
 
-        local new_line_trans = join(sub, trans_sel)
-        if trans_sel[1] > sel[1] then
-            sub.delete(trans_sel)
-            sub.insert(trans_sel[1], new_line_trans)
+        local new_line_trans = join(sub, target_sel)
+        if target_sel[1] > sel[1] then
+            sub.delete(target_sel)
+            sub.insert(target_sel[1], new_line_trans)
             sub.delete(sel)
             sub.insert(sel[1], new_line)
             return { sel[1] }
         else
             sub.delete(sel)
             sub.insert(sel[1], new_line)
-            sub.delete(trans_sel)
-            sub.insert(trans_sel[1], new_line_trans)
+            sub.delete(target_sel)
+            sub.insert(target_sel[1], new_line_trans)
             return { sel[1] - #sel + 1 }
         end
     end
@@ -825,19 +877,6 @@ local function jump_to_next_paragraph(sub, sel)
     else
         return { next_paragraph[1].start_i }
     end
-end
-
--- 是否选中同一样式
-local function has_same_style(sub, sel)
-    if #sel == 0 then
-        return false
-    end
-    for _, s in ipairs(sel) do
-        if sub[s].style ~= sub[sel[1]].style then
-            return false
-        end
-    end
-    return true
 end
 
 -- 是否选中段落
@@ -889,8 +928,10 @@ aegisub.register_macro(script_name .. "/Apply to Corresponding Para", "应用到
     apply_to_corresponding_paragragh, check_paragraph_name)
 aegisub.register_macro(script_name .. "/Check Bilingual Dialogue", "检查对话中日轴",
     check_bilingual_dialogue, has_bilingual_dialogue)
-aegisub.register_macro(script_name .. "/Check Full Sub", "检查全文", check_full_sub)
-aegisub.register_macro(script_name .. "/Copy Line", "复制当前行", copy_line)
+aegisub.register_macro(script_name .. "/Check Full Sub", "检查全文",
+    check_full_sub)
+aegisub.register_macro(script_name .. "/Duplicate Active Line", "复制当前激活行",
+    duplicate_line)
 aegisub.register_macro(script_name .. "/Join Lines (Bilingual)", "合并行",
     join_lines, function(_, sel) return #sel > 1 end)
 aegisub.register_macro(script_name .. "/Jump to Corresponding Line", "跳转到对应行",
@@ -905,7 +946,7 @@ aegisub.register_macro(script_name .. "/Move Paras Up", "上移选定段落",
     move_paragraphs_up, check_paragraph_name)
 aegisub.register_macro(script_name .. "/Select Paras", "全选该段落",
     select_paragraphs, check_paragraph_name)
-aegisub.register_macro(script_name .. "/Split Bilingual Lines", "拆分选定行的中日轴",
-    split_bilingual_lines, has_same_style)
+aegisub.register_macro(script_name .. "/Split Active Line At Current Frame", "在当前帧位置拆分行",
+    duplicate_line_split)
 aegisub.register_macro(script_name .. "/Split Bilingual Paras", "拆分选定段落的中日轴",
     split_bilingual_paragraphs, check_paragraph_name)

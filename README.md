@@ -26,8 +26,8 @@ DepCtrl Feed: `https://raw.githubusercontent.com/oborozuk1/Aegisub-Scripts/main/
 下面的设置可以通过在代码中修改。
 - 中文样式：`CN` （样式名称带有 `CN` 视为中文样式）
 - 日文样式：`JP` （样式名称带有 `JP` 视为日文样式）
-- 中文段落名：`Dialogue CN`
-- 日文段落名：`Dialogue JP`
+- 中文对话段落名：`Dialogue CN`
+- 日文对话段落名：`Dialogue JP`
 - 中日分隔符：`。`
 
 如果要使两个段落对应，需要设置一个的段落名为 `XXCNYY`，另一个的段落名为 `XXJPYY` （或是自己定义的中日样式）
@@ -48,7 +48,7 @@ DepCtrl Feed: `https://raw.githubusercontent.com/oborozuk1/Aegisub-Scripts/main/
 
 检查全文。除检查对话中日轴外，还会检查全文的用词。可自行修改代码中的 `unrecommended_patterns` 变量。
 
-### Copy Line
+### Duplicate Active
 
 复制当前激活行，如果有对应段落则会尝试复制对应行。
 
@@ -92,17 +92,15 @@ DepCtrl Feed: `https://raw.githubusercontent.com/oborozuk1/Aegisub-Scripts/main/
 
 **要求:** 选中段落中的一行或多行
 
-### Split Bilingual Lines
+### Split Active Line At Current Frame
 
-拆分选定行的中日轴，不推荐使用。
-
-**要求:** 选中行必须包含特定的换行符
+在当前帧位置拆分行，如果有对应段落则会尝试拆分对应行。
 
 ### Split Bilingual Paras
 
 拆分选定段落的中日轴。
 
-TODO: 可以自由设置中日文的前后顺序
+如果是「{中文}{分隔符}{日文}」的形式，请设置这一段落为中文段落；反之设置为日文段落。
 
 **要求:** 选中段落必须包含特定的分割符，注意一行里分割符只能出现一次
 
