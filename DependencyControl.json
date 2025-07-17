@@ -24,11 +24,11 @@
                         {
                             "name": ".moon",
                             "url": "@{fileBaseUrl}@{fileName}",
-                            "sha1": "d3b0140bb6fa051d0fec16051c1791c61f80bb43"
+                            "sha1": "5563904b6119f021da32d9fed2f367099def5308"
                         }
                     ],
-                    "version": "0.2.0",
-                    "released": "2025-05-10",
+                    "version": "0.2.2",
+                    "released": "2025-07-17",
                     "default": true
                 }
             },
