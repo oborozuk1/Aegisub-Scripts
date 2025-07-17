@@ -1,5 +1,6 @@
 import hashlib
 import json
+import subprocess
 import yaml
 import re
 
@@ -27,7 +28,16 @@ def get_version_from_file(file_path: Path):
 
 
 def get_file_modified_date(file_path: Path):
-    return datetime.fromtimestamp(file_path.stat().st_mtime)
+    result = subprocess.run(
+        ["git", "log", "-1", "--format=%cd", "--date=iso", file_path],
+        capture_output=True,
+        text=True,
+        check=True,
+        cwd=file_path.parent,
+    )
+    time_str = result.stdout.strip()
+    dt = datetime.fromisoformat(time_str)
+    return dt
 
 
 def set_general(info):
@@ -58,7 +68,7 @@ def read_from_yaml(file_path: Path) -> dict:
 
     with open(file_path, "r") as f:
         dic = yaml.safe_load(f)
-
+    
     for key, value in dic.items():
         if key == "general":
             res |= set_general(value)
@@ -68,8 +78,9 @@ def read_from_yaml(file_path: Path) -> dict:
     return res
 
 
-def set_channels(root_dir, macro_name, macro_info):
+def set_channels(root_dir, macro_info, macro_name):
     has_default = False
+    file_base_path = macro_info["fileBaseUrl"].replace("@{fileBaseUrl}", str(root_dir))
     for channel_info in macro_info["channels"].values():
         has_default |= channel_info.get("default", False)
         release_date = None
@@ -83,10 +94,8 @@ def set_channels(root_dir, macro_name, macro_info):
             # TODO: extract requiredModules from files
 
             if "sha1" not in file_info:
-                filename = file_info["name"]
-                if filename.startswith("."):
-                    filename = macro_name + filename
-                file_path = root_dir / "macros" / filename
+                file_path = Path(file_info["url"].replace("@{fileBaseUrl}", file_base_path).replace(
+                    "@{namespace}", macro_name).replace("@{fileName}", file_info["name"]))
                 file_info["sha1"] = calculate_sha1(file_path)
 
                 if not version:
@@ -116,7 +125,7 @@ def set_channels(root_dir, macro_name, macro_info):
             break
 
 
-def set_macro_base(macro_name, macro_info):
+def set_macro_base(macro_info, macro_name):
     if "name" not in macro_info:
         name = macro_name.split(".", 1)[-1].replace("-", " ")
         name = re.sub(r"(?<=[a-z])(?=[A-Z])", " ", name)
@@ -137,8 +146,8 @@ def set_macros(root_dir, info):
         if "channels" not in macro_info:
             macro_info["channels"] = {"main": {}}
 
-        set_macro_base(macro_name, macro_info)
-        set_channels(root_dir, macro_name, macro_info)
+        set_macro_base(macro_info, macro_name)
+        set_channels(root_dir, macro_info, macro_name)
 
 
 def set_modules(root_dir, info):
@@ -146,9 +155,10 @@ def set_modules(root_dir, info):
 
 
 def main():
-    root_dir = Path(__file__).parent.parent.parent
+    root_dir = Path(__file__).parent
 
     info = read_from_yaml(root_dir / "FeedInfo.yaml")
+    print(info)
 
     if "macros" in info:
         set_macros(root_dir, info)
