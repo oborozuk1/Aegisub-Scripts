@@ -1,7 +1,7 @@
 export script_name = "Margin Adjuster"
 export script_description = "Adjust subtitle position margins"
 export script_author = "oborozuk1"
-export script_version = "0.2.0"
+export script_version = "0.2.2"
 
 ALLOWED_OFFSET = 6
 
@@ -9,7 +9,7 @@ haveDepCtrl, DependencyControl = pcall require, "l0.DependencyControl"
 local depctrl, re, Ass, Config, Line, Math
 if haveDepCtrl
   depctrl = DependencyControl {
-    feed: "https://raw.githubusercontent.com/TypesettingTools/ILL-Aegisub-Scripts/main/DependencyControl.json"
+		feed: "https://raw.githubusercontent.com/TypesettingTools/ILL-Aegisub-Scripts/main/DependencyControl.json"
     { "ILL.ILL" }
   }
   ILL = depctrl\requireModules!
@@ -59,7 +59,7 @@ applyOffset = (ass, line, index, usingPos) ->
   if line.tags\existsTag "pos"
     {x, y} = line.tags\getTag("pos")\getValue!
     offsetUsingPos line, offset, x, y
-  elseif usingPos
+  else if usingPos
     {:x, :y} = line
     offsetUsingPos line, offset, x, y
   else
@@ -88,17 +88,19 @@ applyOffset = (ass, line, index, usingPos) ->
 
 adjustParagraphs = (sub, names) ->
   ass = Ass sub, {}, 0
+  namesMap = { name, true for name in *names }
   currParagraph = nil
+  pattern = paragraph_pattern!
   for line, i, t in ass\iterSub!
-    ass\progressLine i, i, t
+    -- ass\progressLine i, i, t
     continue unless line.class == "dialogue"
-    
-    Line.extend ass, line
     if line.comment
-      match = line.text\get!\match paragraph_pattern!
-      if match then currParagraph = match
+      match = line.text\match pattern
+      currParagraph = match if match
       continue
-    continue if not currParagraph or not contains(names, currParagraph) or line.tags\existsTagOr "pos", "move"
+    continue if not namesMap[currParagraph]
+    Line.extend ass, line
+    continue if line.tags\existsTagOr "pos", "move"
     applyOffset ass, line, i
 
 adjustDialogue = (sub) ->
@@ -116,7 +118,7 @@ adjustSelection = (usingPos) ->
     ass = Ass sub, sel, 0
     for line, s, i, t in ass\iterSel!
       Line.extend ass, line
-      ass\progressLine s, i, t
+      -- ass\progressLine s, i, t
       applyOffset ass, line, s, usingPos
 
 if haveDepCtrl
