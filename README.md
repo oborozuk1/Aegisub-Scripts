@@ -13,17 +13,20 @@ DepCtrl Feed: `https://raw.githubusercontent.com/oborozuk1/Aegisub-Scripts/main/
 - **Margin Adjuster/Adjust Selection:** 选中字幕，调整其边距
 - **Margin Adjuster/Adjust Selection using `\pos`:** 使用 `\pos` 标签调整选中字幕的边距
 
-## MingYSub-Scripts
+## MingYSub Macro Collection
 
-请手动安装 [MingYSub-Scripts.lua](./macros/MingYSub-Scripts.lua)
+请手动安装 [MingYSub-Macro-Collection.moon](./macros/MingYSub-Macro-Collection.moon)
 
 适用于 MingYSub 的实用字幕处理工具
+
+**注意：正在重构…**
 
 ### 解释
 
 段落的开始定义为：`------ NAME ------`（需要是注释行，至少 6 个 `-`，后可接任意字符；例：`------ OPCN ------ ABC`）
 
 下面的设置可以通过在代码中修改。
+
 - 中文样式：`CN` （样式名称带有 `CN` 视为中文样式）
 - 日文样式：`JP` （样式名称带有 `JP` 视为日文样式）
 - 中文对话段落名：`Dialogue CN`
@@ -38,23 +41,23 @@ DepCtrl Feed: `https://raw.githubusercontent.com/oborozuk1/Aegisub-Scripts/main/
 
 **要求:** 存在对应段落，且长度一致
 
-### Check Bilingual Dialogue
+<!-- ### Check Bilingual Dialogue
 
 检查对话中日轴，包括时间、标点、标签、样式、边距、空格、换行符。
 
-**要求:** 存在对话中日段落，且长度一致
+**要求:** 存在对话中日段落，且长度一致 -->
 
-### Check Full Sub
+<!-- ### Check Full Sub
 
-检查全文。除检查对话中日轴外，还会检查全文的用词。可自行修改代码中的 `unrecommended_patterns` 变量。
+检查全文。除检查对话中日轴外，还会检查全文的用词。可自行修改代码中的 `unrecommended_patterns` 变量。 -->
 
-### Duplicate Active
+### Duplicate Selection
 
-复制当前激活行，如果有对应段落则会尝试复制对应行。
+复制选中行，如果有对应段落则会尝试复制对应行。
 
 **要求:** 如果希望在对应段落上使用，需要存在对应段落，且长度一致
 
-### Join Lines (Bilingual)
+### Join Lines (Smart)
 
 可以代替 Aegisub 的合并行。如果有对应段落则同时合并对应段落的几行，否则和原始的合并行一样。
 
@@ -78,13 +81,9 @@ DepCtrl Feed: `https://raw.githubusercontent.com/oborozuk1/Aegisub-Scripts/main/
 
 下移选定段落。
 
-**要求:** 需要选中连续的段落（选中每个段落的一行或多行）
-
 ### Move Paras Up
 
 上移选定段落。
-
-**要求:** 需要选中连续的段落（选中每个段落的一行或多行）
 
 ### Select Paras
 
@@ -103,4 +102,3 @@ DepCtrl Feed: `https://raw.githubusercontent.com/oborozuk1/Aegisub-Scripts/main/
 如果是「{中文}{分隔符}{日文}」的形式，请设置这一段落为中文段落；反之设置为日文段落。
 
 **要求:** 选中段落必须包含特定的分割符，注意一行里分割符只能出现一次
-
