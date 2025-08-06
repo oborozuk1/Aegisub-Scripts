@@ -1,7 +1,7 @@
 export script_name = "MingYSub Macro Collection"
 export script_description = "适用于 MingYSub 的实用字幕处理工具"
 export script_author = "Ming"
-export script_version = "0.3.0"
+export script_version = "0.3.1"
 
 math = require "math"
 unicode = require "unicode"
@@ -527,6 +527,8 @@ moveParagraphsUp = (sub, sel) ->
 selectParagraphs = (sub, sel) ->
   s = getPrevParagraphMarkIndex(sub, sel[1]) or 1 + getIndexOffset sub
   e = getNextParagraphMarkIndex(sub, sel[#sel]) or #sub + 1
+  if e == #sub + 1 and sub[#sub].comment and sub[#sub].text == ""
+    e -= 1
   return range s, e - 1
 
 splitActiveLineAtCurrentFrame = (sub, _, act) ->
