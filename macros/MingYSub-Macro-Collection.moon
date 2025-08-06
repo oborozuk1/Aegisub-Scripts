@@ -53,8 +53,8 @@ copy = (t, deep, seen = {}) ->
   return seen[t] if seen[t]
   nt = {}
   for k, v in pairs t
-    nt[k] = if deep and type(v) == "table" then table.copy(v, deep, seen) else v
-  setmetatable nt, table.copy getmetatable(t), deep, seen
+    nt[k] = if deep and type(v) == "table" then copy(v, deep, seen) else v
+  setmetatable nt, copy getmetatable(t), deep, seen
   seen[t] = nt
   return nt
 
@@ -149,7 +149,7 @@ loadConfig = () ->
       dialogue: { "Dialogue ~" }
       paragraphs: { "Dialogue ~", "OP~", "ED~", "IN~", "Sign", "Title", "Note", "Comment", "Credits", "Staff" }
       split: {
-        partition: { "。", "\\N" }
+        partition: { "。", "\\N", "\t" }
 
       }
     }
@@ -161,7 +161,7 @@ loadConfig = () ->
       dialogue: "Dialogue ~"
       paragraphs: { "Dialogue ~", "OP~", "ED~", "IN~", "Sign", "Title", "Note", "Comment", "Credits", "Staff" }
       split: {
-        partition: { "。", "\\N" }
+        partition: { "。", "\\N", "\t" }
         translationLayer: 7
         originalLayer: 5
       }
@@ -541,8 +541,8 @@ splitActiveLineAtCurrentFrame = (sub, _, act) ->
     if ratio <= 0 or ratio >= 1
       sub.insert i + 1, lineCopy
       return { i + 1 }
-    lang = detectLanguage(line.style)
-    line.text, lineCopy.text = splitTextByRatio line.text, lang.connector or " ", ratio
+    lang = detectLanguage line.style
+    line.text, lineCopy.text = splitTextByRatio line.text, lang and lang.connector or " ", ratio
     line.end_time = videoTime
     lineCopy.start_time = videoTime
     sub[i] = line
@@ -623,7 +623,7 @@ insertParagraphMarkInterface = (sub, sel) ->
     { class: "edit", name: "mark", x: 1, y: 0, width: 8 }
     { class: "label", label: "Select from:", x: 0, y: 1 }
     { class: "dropdown", name: "para", x: 1, y: 1, items: userConfig.paragraphs }
-    { class: "dropdown", name: "lang", x: 2, y: 1, items: addTable({ "NULL" }, userConfig.languages), value: lang.keyword }
+    { class: "dropdown", name: "lang", x: 2, y: 1, items: addTable({ "NULL" }, userConfig.languages), value: lang and lang.keyword or nil }
     { class: "label", label: "Comment:", x: 0, y: 2 }
     { class: "edit", name: "comment", x: 1, y: 2, width: 8 }
     { class: "label", label: "Style:", x: 0, y: 3 }
