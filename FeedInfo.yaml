@@ -33,5 +33,10 @@ macros:
             feed: "@{feed:Akatsumekusa}"
             version: "1.0.14"
     changelog:
+      "0.1.1":
+        - "Fix regex escaping"
+        - "`lint-disable` is now case-sensitive"
+        - "Fix macro name"
+        
       "0.1.0":
         - "Initial release"

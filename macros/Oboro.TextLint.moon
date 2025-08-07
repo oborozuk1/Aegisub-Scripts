@@ -142,14 +142,13 @@ lint = (sub) ->
 			indexOffset = i - 1
 			break
 	sel = {}
-	disableAllLintPattern = re.compile "(^|;)\\s*lint-disable\\s*(;|$)", re.ICASE, re.NOSUB
+	disableAllLintPattern = re.compile "(^|;)\\s*lint-disable\\s*(;|$)", re.NOSUB
 	for { :namespace, :name, :field, :pattern, :message, :severity, :condition } in *rules
 		lineCount = 0
 		for i = 1, n - indexOffset
 			line = sub[i + indexOffset]
 			line.text_stripped = line.text\gsub "%{.-%}", ""
-			-- seems re.escape is not available
-			disableCurLintPattern = re.compile "(^|;)\\s*lint-disable\\s*:([^;]*,)?\\s*(#{namespace\gsub "/", "\\/"})\\s*(,[^;]*)?(;|$)", re.ICASE, re.NOSUB
+			disableCurLintPattern = re.compile "(^|;)\\s*lint-disable\\s*:([^;]*,)?\\s*(\\Q#{namespace}\\E)\\s*(,[^;]*)?(;|$)", re.NOSUB
 			continue if disableAllLintPattern\match(line.effect) or disableCurLintPattern\match(line.effect)
 			continue unless shouldMatch line, condition
 			continue if shouldSkip line, condition
@@ -176,7 +175,7 @@ configPresets = ->
 	}
 	if presets.presets[presets.current]
 		table.insert interface, { class: "label", label: "Preset Rules", x: 0, y: 1 }
-		table.insert interface, { class: "checkbox", name: "recreate", label: "Recreate Interface after saved", x: 1, y: 1 }
+		table.insert interface, { class: "checkbox", name: "recreate", label: "&Recreate Interface after saved", x: 1, y: 1 }
 		table.sort presets.presets[presets.current]
 		for i, ruleName in ipairs presets.presets[presets.current]
 			table.insert interface, { class: "label", label: "Rule #{i}", x: 0, y: 1 + i }
@@ -232,5 +231,5 @@ if haveDepCtrl
 		{ "Lint", script_description, lint }
 	}
 else
-	aegisub.register_macro "#{script_name}/Config", "Config Presets", configPresets
+	aegisub.register_macro "#{script_name}/Config Presets", "Config Presets", configPresets
 	aegisub.register_macro "#{script_name}/Lint", script_description, lint
