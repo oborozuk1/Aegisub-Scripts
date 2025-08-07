@@ -6,7 +6,8 @@
     "fileBaseUrl": "https://raw.githubusercontent.com/oborozuk1/Aegisub-Scripts/@{channel}",
     "url": "@{baseUrl}",
     "knownFeeds": {
-        "ILL": "https://raw.githubusercontent.com/TypesettingTools/ILL-Aegisub-Scripts/main/DependencyControl.json"
+        "ILL": "https://raw.githubusercontent.com/TypesettingTools/ILL-Aegisub-Scripts/main/DependencyControl.json",
+        "Akatsumekusa": "https://raw.githubusercontent.com/Akatmks/Akatsumekusa-Aegisub-Scripts/master/DependencyControl.json"
     },
     "macros": {
         "Oboro.MarginAdjuster": {
@@ -33,6 +34,9 @@
                 }
             },
             "changelog": {
+                "0.2.2": [
+                    "Improve margin adjustment performance"
+                ],
                 "0.2.0": [
                     "Initial release"
                 ]
@@ -41,6 +45,39 @@
             "url": "@{baseUrl}#@{scriptName}",
             "fileBaseUrl": "@{fileBaseUrl}/macros/@{namespace}",
             "name": "Margin Adjuster"
+        },
+        "Oboro.TextLint": {
+            "description": "Lint subtitles based on specific rules.",
+            "channels": {
+                "main": {
+                    "requiredModules": [
+                        {
+                            "moduleName": "aka.config",
+                            "feed": "@{feed:Akatsumekusa}",
+                            "version": "1.0.14"
+                        }
+                    ],
+                    "files": [
+                        {
+                            "name": ".moon",
+                            "url": "@{fileBaseUrl}@{fileName}",
+                            "sha1": "237afff6306743b94a427c8131ae65d3e2269398"
+                        }
+                    ],
+                    "version": "0.1.0",
+                    "released": "2025-08-07",
+                    "default": true
+                }
+            },
+            "changelog": {
+                "0.1.0": [
+                    "Initial release"
+                ]
+            },
+            "author": "Oborozuki",
+            "url": "@{baseUrl}#@{scriptName}",
+            "fileBaseUrl": "@{fileBaseUrl}/macros/@{namespace}",
+            "name": "Text Lint"
         }
     }
 }
