@@ -61,7 +61,7 @@
                         {
                             "name": ".moon",
                             "url": "@{fileBaseUrl}@{fileName}",
-                            "sha1": "237afff6306743b94a427c8131ae65d3e2269398"
+                            "sha1": "93c5936cd8ec31f4e62e133c180b8083cfd5b855"
                         }
                     ],
                     "version": "0.1.0",
@@ -70,6 +70,11 @@
                 }
             },
             "changelog": {
+                "0.1.1": [
+                    "Fix regex escaping",
+                    "`lint-disable` is now case-sensitive",
+                    "Fix macro name"
+                ],
                 "0.1.0": [
                     "Initial release"
                 ]
