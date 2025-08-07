@@ -2,7 +2,7 @@
 
 DepCtrl Feed: `https://raw.githubusercontent.com/oborozuk1/Aegisub-Scripts/main/DependencyControl.json`
 
-## MarginAdjuster
+## Margin Adjuster
 
 可用 DepCtrl 安装
 
@@ -12,6 +12,16 @@ DepCtrl Feed: `https://raw.githubusercontent.com/oborozuk1/Aegisub-Scripts/main/
 - **Margin Adjuster/Adjust Paragraphs:** 通过对话框指定要调整的段落，跳过带有 `\pos` 和 `\move` 的行
 - **Margin Adjuster/Adjust Selection:** 选中字幕，调整其边距
 - **Margin Adjuster/Adjust Selection using `\pos`:** 使用 `\pos` 标签调整选中字幕的边距
+
+## Text Lint
+
+可用 DepCtrl 安装
+
+基于正则表达式检查字幕的文本。目前需要手动编写预设规则，放在配置目录下，格式参见[例子](./snippets/Oboro.TextLint/Example.json]])。
+
+在 Text Lint > Config Presets 里设置预设，规则的格式为：`filename/rule_name`（例如：`Example/EmptyLine`）。
+
+在特效栏里添加 `lint-disable` 禁用此行所有检查，添加 `lint-disable: A/B, C/D` 禁用此行指定规则检查。
 
 ## MingYSub Macro Collection
 

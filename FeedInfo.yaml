@@ -6,6 +6,7 @@ general:
 
 knownFeeds:
   ILL: "https://raw.githubusercontent.com/TypesettingTools/ILL-Aegisub-Scripts/main/DependencyControl.json"
+  Akatsumekusa: "https://raw.githubusercontent.com/Akatmks/Akatsumekusa-Aegisub-Scripts/master/DependencyControl.json"
 
 macros:
   Oboro.MarginAdjuster:
@@ -17,5 +18,20 @@ macros:
             feed: "@{feed:ILL}"
             version: "1.5.7"
     changelog:
+      "0.2.2":
+        - "Improve margin adjustment performance"
+
       "0.2.0":
+        - "Initial release"
+
+  Oboro.TextLint:
+    description: "Lint subtitles based on specific rules."
+    channels:
+      main:
+        requiredModules:
+          - moduleName: "aka.config"
+            feed: "@{feed:Akatsumekusa}"
+            version: "1.0.14"
+    changelog:
+      "0.1.0":
         - "Initial release"

@@ -1,0 +1,52 @@
+{
+    "EmptyLine": {
+        "name": "Empty Line",
+        "pattern": "^\\s*$",
+        "flags": [
+            "NOSUB"
+        ],
+        "field": "text",
+        "message": "Empty line found",
+        "severity": "Warning",
+        "condition": {
+            "skip": [
+                {
+                    "type": "and",
+                    "filters": [
+                        {
+                            "field": "actor",
+                            "mode": "not_match",
+                            "pattern": "TEST",
+                            "flags": [
+                                "ICASE"
+                            ]
+                        },
+                        {
+                            "field": "effect",
+                            "mode": "not_match",
+                            "pattern": "TEST"
+                        }
+                    ]
+                }
+            ],
+            "match": [
+                {
+                    "type": "or",
+                    "filters": [
+                        {
+                            "field": "actor",
+                            "mode": "match",
+                            "pattern": "A"
+                        },
+                        {
+                            "field": "effect",
+                            "mode": "match",
+                            "pattern": "B"
+                        }
+                    ]
+                }
+            ],
+            "skip_comments": true
+        }
+    }
+}
