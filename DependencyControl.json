@@ -61,15 +61,19 @@
                         {
                             "name": ".moon",
                             "url": "@{fileBaseUrl}@{fileName}",
-                            "sha1": "93c5936cd8ec31f4e62e133c180b8083cfd5b855"
+                            "sha1": "9d666c9174c5c11534c4a43c033868aa33b2b376"
                         }
                     ],
-                    "version": "0.1.0",
-                    "released": "2025-08-07",
+                    "version": "0.1.2",
+                    "released": "2025-08-08",
                     "default": true
                 }
             },
             "changelog": {
+                "0.1.2": [
+                    "Multiple regex patterns for each lint rule",
+                    "Improve logging"
+                ],
                 "0.1.1": [
                     "Fix regex escaping",
                     "`lint-disable` is now case-sensitive",
