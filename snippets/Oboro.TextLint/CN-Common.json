@@ -1,0 +1,122 @@
+{
+    "Interrobang": {
+        "patterns": [
+            "[!！][?？]"
+        ],
+        "flags": [
+            "NOSUB"
+        ],
+        "field": "text_stripped",
+        "message": "Incorrect interrobang usage found. Should be `?!`.",
+        "severity": "Warning",
+        "condition": {
+            "skip": [
+                {
+                    "type": "or",
+                    "filters": [
+                        {
+                            "field": "style",
+                            "pattern": "J[AP]",
+                            "flags": [
+                                "ICASE"
+                            ]
+                        }
+                    ]
+                }
+            ],
+            "skip_comments": true
+        }
+    },
+    "Ellipsis": {
+        "patterns": [
+            "\\.{3}"
+        ],
+        "flags": [
+            "NOSUB"
+        ],
+        "field": "text_stripped",
+        "message": "Incorrect ellipsis usage found. Should be `…`.",
+        "severity": "Warning",
+        "condition": {
+            "skip": [
+                {
+                    "type": "or",
+                    "filters": [
+                        {
+                            "field": "style",
+                            "pattern": "EN",
+                            "flags": [
+                                "ICASE"
+                            ]
+                        }
+                    ]
+                }
+            ],
+            "skip_comments": true
+        }
+    },
+    "Quotes": {
+        "patterns": [
+            "[\"“”'‘’]"
+        ],
+        "flags": [
+            "NOSUB"
+        ],
+        "field": "text_stripped",
+        "message": "Recommended to use `「」『』`.",
+        "severity": "Info",
+        "condition": {
+            "skip": [
+                {
+                    "type": "or",
+                    "filters": [
+                        {
+                            "field": "style",
+                            "pattern": "EN",
+                            "flags": [
+                                "ICASE"
+                            ]
+                        }
+                    ]
+                }
+            ],
+            "skip_comments": true
+        }
+    },
+    "Half-Width-Punctuation": {
+        "patterns": [
+            "[\\x{4e00}-\\x{9fa5}][,.?!:;](?![,.?!:;])|(?<![,.?!:;])[.,?!:;]+[\\x{4e00}-\\x{9fa5}]"
+        ],
+        "flags": [
+            "NOSUB"
+        ],
+        "field": "text_stripped",
+        "message": "Recommended to use full-width punctuations.",
+        "severity": "Info",
+        "condition": {
+            "skip_comments": true
+        }
+    },
+    "Repeated-Punctuation": {
+        "patterns": [
+            "([！？。，：；【】（）])\\1+"
+        ],
+        "field": "text_stripped",
+        "message": "Repeated punctuation found.",
+        "severity": "Warning",
+        "condition": {
+            "skip_comments": true
+        }
+    },
+    "CJK-Latin-Spacing": {
+        "patterns": [
+            "[\\x{4e00}-\\x{9fa5}][a-zA-Z0-9]+|[a-zA-Z0-9]+(?<!\\\\[nhN])[\\x{4e00}-\\x{9fa5}]"
+        ],
+        "field": "text_stripped",
+        "message": "CJK and Latin characters should not be adjacent without spacing.",
+        "severity": "Info",
+        "condition": {
+            "skip_comments": true
+        }
+    }
+}

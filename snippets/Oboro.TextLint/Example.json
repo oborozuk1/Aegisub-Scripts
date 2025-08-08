@@ -1,7 +1,9 @@
 {
     "EmptyLine": {
         "name": "Empty Line",
-        "pattern": "^\\s*$",
+        "patterns": [
+            "^\\s*$"
+        ],
         "flags": [
             "NOSUB"
         ],

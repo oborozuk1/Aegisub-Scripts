@@ -1,21 +1,27 @@
 export script_name = "Text Lint"
 export script_description = "Lint subtitles based on specific rules."
 export script_author = "Oborozuki"
-export script_version = "0.1.0"
+export script_version = "0.1.2"
 export script_namespace = "Oboro.TextLint"
 
 haveDepCtrl, DependencyControl = pcall require, "l0.DependencyControl"
-local depctrl, aconfig, re
+local depctrl, aconfig, math, os, re
 if haveDepCtrl
 	depctrl = DependencyControl {
 		feed: "https://raw.githubusercontent.com/Akatmks/Akatsumekusa-Aegisub-Scripts/master/DependencyControl.json"
-		{ "aka.config", "re" }
+		{ "aka.config", "math", "os", "re" }
 	}
-	aconfig, re = depctrl\requireModules!
+	aconfig, math, os, re = depctrl\requireModules!
 else
 	aconfig = require "aka.config"
+	math = require "math"
+	os = require "os"
 	re = require "aegisub.re"
-	
+
+round = (num, decimal = 3) ->
+	multiplier = 10 ^ decimal
+	return math.floor(num * multiplier + 0.5) / multiplier
+
 matchCondition = (line, conditionGroup) ->
 	for { :field, :pattern, :mode } in *conditionGroup.filters
 		value = line[field]
@@ -54,7 +60,7 @@ loadLintMap = (filename) ->
 		return lintMap
 
 processCondition = (condition) ->
-	process = (groups) -> 
+	process = (groups) ->
 		newGroups = {}
 		for group in *groups
 			if group.filters and #group.filters > 0
@@ -93,7 +99,7 @@ loadRules = ->
 	unless success
 		aegisub.log "Please check the presets.\n"
 		aegisub.cancel!
-		
+
 	rules = {}
 	for filename, ruleNames in pairs rulesInFile
 		lintMap = loadLintMap filename
@@ -111,7 +117,7 @@ loadRules = ->
 			table.insert rules, {
 				namespace: "#{filename}/#{ruleName}",
 				name: rule.name or ruleName
-				pattern: re.compile rule.pattern, unpack flags
+				patterns: [ re.compile pattern, unpack flags for pattern in *rule.patterns ]
 				field: rule.field or "text"
 				message: rule.message or "No message provided"
 				severity: rule.severity or "Warning"
@@ -122,13 +128,17 @@ loadRules = ->
 
 logLint = (severity, lintName, field, message) -> aegisub.log "[#{severity}] #{lintName} (#{field}): #{message}\n"
 
-logLineInfo = (index, match) -> aegisub.log "- Line #{index}: #{match}\n"
+logLineInfo = (first, last, text) ->
+	text = "(empty)" if #text == 0
+	index = if first == last then first else "#{first}-#{last}"
+	aegisub.log "- Line #{index}: #{text}\n"
 
 logDevidingLine = -> aegisub.log "-----------------------------------------\n"
 
 lint = (sub) ->
+	startTime = os.clock!
+
 	preset, rules = loadRules!
-	logDevidingLine!
 	aegisub.log "Preset: #{preset.name}\nRules:\n"
 	for rule in *rules
 		aegisub.log "- #{rule.namespace}\n"
@@ -136,32 +146,55 @@ lint = (sub) ->
 
 	indexOffset = 0
 	n = #sub
+	subCopy = {}
 	for i = 1, n
 		line = sub[i]
-		if line.class == "dialogue"
-			indexOffset = i - 1
-			break
+		if line.class != "dialogue"
+			indexOffset = i
+		else
+			line.text_stripped = line.text\gsub "%{.-%}", ""
+			subCopy[i - indexOffset] = line
 	sel = {}
 	disableAllLintPattern = re.compile "(^|;)\\s*lint-disable\\s*(;|$)", re.NOSUB
-	for { :namespace, :name, :field, :pattern, :message, :severity, :condition } in *rules
-		lineCount = 0
-		for i = 1, n - indexOffset
-			line = sub[i + indexOffset]
-			line.text_stripped = line.text\gsub "%{.-%}", ""
+	for { :namespace, :name, :field, :patterns, :message, :severity, :condition } in *rules
+		count = 0
+		logged = false
+		startIndex = nil
+		lastMatch = nil
+		for i, line in pairs subCopy
 			disableCurLintPattern = re.compile "(^|;)\\s*lint-disable\\s*:([^;]*,)?\\s*(\\Q#{namespace}\\E)\\s*(,[^;]*)?(;|$)", re.NOSUB
 			continue if disableAllLintPattern\match(line.effect) or disableCurLintPattern\match(line.effect)
 			continue unless shouldMatch line, condition
 			continue if shouldSkip line, condition
 			text = line[field]
-			if match = pattern\match text
-				logLint severity, name, field, message if lineCount == 0
-				logLineInfo i, match[1].str
-				lineCount += 1
+			currMatches = {}
+			for pattern in *patterns
+				if match = pattern\match text
+					table.insert currMatches, match[1].str
+					count += 1
+			if #currMatches > 0
+				logLint severity, name, field, message unless logged
+				logged = true
 				table.insert sel, i + indexOffset
-		if lineCount > 0
-			aegisub.log "Found #{lineCount} occurrences in #{n - indexOffset} lines.\n"
+				currMatch = table.concat currMatches, ", "
+				startIndex = i if startIndex == nil
+				if lastMatch and lastMatch != currMatch
+					logLineInfo startIndex, i - 1, lastMatch
+				else
+					lastMatch = currMatch
+				startIndex = i if lastMatch != currMatch
+			else
+				if lastMatch
+					logLineInfo startIndex, i - 1, lastMatch
+					startIndex = nil
+				lastMatch = nil
+		if lastMatch
+			logLineInfo startIndex, n - indexOffset, lastMatch
+		if count > 0
+			aegisub.log "Found #{count} occurrences in #{n - indexOffset} lines.\n"
 			logDevidingLine!
-	aegisub.log "Linting completed with #{#rules} rules.\n"
+	endTime = os.clock!
+	aegisub.log "Linting completed with #{#rules} rules in #{round endTime - startTime} seconds.\n"
 	return sel
 
 dialogWarn = (message) -> aegisub.dialog.display { { class: "label", label: message } }, { ok: "&OK" }

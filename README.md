@@ -17,9 +17,9 @@ DepCtrl Feed: `https://raw.githubusercontent.com/oborozuk1/Aegisub-Scripts/main/
 
 可用 DepCtrl 安装
 
-基于正则表达式检查字幕的文本。目前需要手动编写预设规则，放在配置目录下，格式参见[例子](./snippets/Oboro.TextLint/Example.json]])。
+基于正则表达式检查字幕的文本。目前需要手动编写预设规则，放在配置目录下，格式参见[例子](./snippets/Oboro.TextLint/Example.json)。
 
-在 Text Lint > Config Presets 里设置预设，规则的格式为：`filename/rule_name`（例如：`Example/EmptyLine`）。
+在 Text Lint > Config Presets 里设置预设，规则的格式为：`filename/rule_name`（例如：`Example/EmptyLine`，`filename/*` 代表文件内的所有规则）。
 
 在特效栏里添加 `lint-disable` 禁用此行所有检查，添加 `lint-disable: A/B, C/D` 禁用此行指定规则检查。
 
