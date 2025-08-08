@@ -1,0 +1,108 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Rule Configuration Schema",
+  "type": "object",
+  "patternProperties": {
+    "^.*$": {
+      "type": "object",
+      "properties": {
+        "name": {
+          "type": "string"
+        },
+        "patterns": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "flags": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "enum": ["ICASE", "NOSUB"]
+          }
+        },
+        "field": {
+          "type": "string",
+          "enum": ["text", "text_stripped", "style", "actor", "effect"]
+        },
+        "message": {
+          "type": "string"
+        },
+        "severity": {
+          "type": "string",
+          "enum": ["Info", "Warning", "Error"]
+        },
+        "condition": {
+          "type": "object",
+          "properties": {
+            "skip": {
+              "type": "array",
+              "items": {
+                "$ref": "#/definitions/ConditionGroup"
+              }
+            },
+            "match": {
+              "type": "array",
+              "items": {
+                "$ref": "#/definitions/ConditionGroup"
+              }
+            },
+            "skip_comments": {
+              "type": "boolean"
+            }
+          },
+          "additionalProperties": false
+        }
+      },
+      "required": ["patterns", "severity"],
+      "additionalProperties": false
+    }
+  },
+  "additionalProperties": false,
+
+  "definitions": {
+    "ConditionGroup": {
+      "type": "object",
+      "properties": {
+        "type": {
+          "type": "string",
+          "enum": ["and", "or"]
+        },
+        "filters": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/Filter"
+          }
+        }
+      },
+      "required": ["filters"],
+      "additionalProperties": false
+    },
+    "Filter": {
+      "type": "object",
+      "properties": {
+        "field": {
+          "type": "string",
+          "enum": ["text", "text_stripped", "style", "actor", "effect"]
+        },
+        "mode": {
+          "type": "string",
+          "enum": ["match", "not_match"]
+        },
+        "pattern": {
+          "type": "string"
+        },
+        "flags": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "enum": ["ICASE", "NOSUB"]
+          }
+        }
+      },
+      "required": ["pattern"],
+      "additionalProperties": false
+    }
+  }
+}

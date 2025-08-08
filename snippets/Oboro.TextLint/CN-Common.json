@@ -12,7 +12,6 @@
         "condition": {
             "skip": [
                 {
-                    "type": "or",
                     "filters": [
                         {
                             "field": "style",
@@ -40,7 +39,6 @@
         "condition": {
             "skip": [
                 {
-                    "type": "or",
                     "filters": [
                         {
                             "field": "style",
@@ -68,7 +66,6 @@
         "condition": {
             "skip": [
                 {
-                    "type": "or",
                     "filters": [
                         {
                             "field": "style",
